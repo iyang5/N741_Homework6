@@ -1,0 +1,243 @@
+---
+title: "N741 Spring 2018 - Homework 6"
+author: "Irene Yang"
+date: "April 6, 2018"
+output:
+  word_document: default
+  html_document: default
+subtitle: Homework 6
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Homework 6 Assignment
+
+```{r Setup}
+
+# load libraries and dataset
+
+library(tidyverse)
+library(haven)
+helpdata <- haven::read_spss("helpmkh.sav")
+
+# choose variables for Homework 6
+
+h1 <- helpdata %>%
+  select(age, female, pss_fr, homeless, pcs, mcs, cesd)
+
+# add dichotomous variable
+# to indicate depression for
+# people with CESD scores >= 16
+
+h1 <- h1 %>%
+  mutate(cesd_gte16 = cesd >= 16)
+
+# change cesd_gte16 LOGIC variable type
+# to numeric coded 1=TRUE and 0=FALSE
+
+h1$cesd_gte16 <- as.numeric(h1$cesd_gte16)
+
+# check final data subset h1
+summary(h1)
+
+```
+
+## Homework 6 Tasks
+
+1. [Model 1] Run a simple linear regression (`lm()`) for `cesd` using the `mcs` variable, which is the mental component quality of life score from the SF36.
+
+```{r Q.1}
+
+RegModel.1 <- lm(cesd~mcs, data=h1)
+
+```
+
+2. Write the equation of the final fitted model (i.e. what is the intercept and the slope)? Write a sentence describing the model results (interpret the intercept and slope). _NOTE: The `mcs` values range form 0 to 100 where the population norm for "normal mental health quality of life" is considered to be a 50. If you score higher than 50 on the `mcs` you have mental health better than the population and visa versa - if your `mcs` scores are less than 50 then your mental health is considered to be worse than the population norm._
+
+```{r Q.2 and Q. 3}
+
+summary(RegModel.1)
+
+```
+
+The regression equation, therefore, is:  cesd = 53.9 - (.67)mcs
+
+An intercept of 53.9 indicates that if an individual scored "0" on the mcs (meaning the worst mental health score possible), their cesd score would be 53.9 and strongly indicative of severe depression. The coefficient of -.67 indicates that for every one point increase in mental health quality of life (mcs), the cesd score will drop by .67.
+
+3. How much variability in the `cesd` does the `mcs` explain? (what is the R<sup>2</sup>?) Write a sentence describing how well the `mcs` does in predicting the `cesd`.
+
+The R Square of .465 explains how much variance in cesd score is explained by this model, i.e. 46.5% of the variance in cesd score is explained by this model.
+
+4. [Model 2] Run a second linear regression model (`lm()`) for the `cesd` putting in all of the other variables: 
+    + `age`
+    + `female`
+    + `pss_fr`
+    + `homeless`
+    + `pcs`
+    + `mcs`
+    
+    + Print out the model results with the coefficients and tests and model fit statistics.
+
+```{r Q.4}
+
+LinearModel.1 <- lm(cesd ~ age + female + pss_fr + homeless + pcs + mcs, data=h1)
+
+summary(LinearModel.1)
+
+# To generate standardized parameter estimates...
+library(QuantPsyc)
+lm.beta(LinearModel.1)
+
+```
+
+5. Which variables are significant in the model? Write a sentence or two describing the impact of these variables for predicting depression scores (HINT: interpret the coefficient terms).
+
+The following variables were significant in the model:  female, pss_fr, pcs, and mcs. This means that **controlling for all other variables:**
+1. Being female is associated with an **increase** in cesd score of 2.35
+2. Having a one unit increase in the scale that measures perceived social support from friends (pss_fr) is associated with a **decrease** in cesd score of .26
+3. Having a one unit increase in the pcs (physical component of the SF-36 - a generic indicator of health status) is associated with a **decrease** in cesd score of .24
+4. Having a one unit increase in mcs (mental health quality of life) is associated with a **decrese** in cesd score of .62
+
+The standardized estimates suggest that mental health quality of life has the highest impact on cesd scores.
+
+6. Following the example we did in class for the Prestige dataset [https://cdn.rawgit.com/vhertzb/2018week9/2f2ea142/2018week9.html?raw=true](https://cdn.rawgit.com/vhertzb/2018week9/2f2ea142/2018week9.html?raw=true), generate the diagnostic plotss for this model with these 6 predictors (e.g. get the residual plot by variables, the added-variable plots, the Q-Q plot, diagnostic plots). Also run the VIFs to check for multicollinearity issues.
+
+```{r Q.6 Residual plot by variables}
+
+library(car)
+
+residualPlots(LinearModel.1)
+
+```
+
+These plots look good with no evidence of a non-zero trend.
+
+```{r Q. 6 Added-variable plots}
+
+avPlots(LinearModel.1, id.n=2, id.cex=0.7)
+
+# Q-Q plot
+qqPlot(LinearModel.1, id.n=3)
+
+# Check for outliers
+outlierTest(LinearModel.1)
+
+```
+
+No studentized residuals with Bonferonni p < 0.05
+
+```{r Q.6 Diagnostic plots}
+
+# Identify influential points
+influenceIndexPlot(LinearModel.1, id.n=3)
+
+# Create an influence plot
+influencePlot(LinearModel.1, id.n=3)
+
+# Test for heteroskedasticity
+ncvTest(LinearModel.1)
+
+```
+
+Since p-value < .05, we reject the null hypothesis, i.e. there IS evidence of non-constant variance of the residuals. The residual plots (above), however, looked pretty good. I will try a different visualization.  
+
+```{r plot of residuals versus fitted values}
+
+plot(LinearModel.1)
+
+```
+
+There is a very slight curvature to the line, but I think overall this looks pretty good, so I will proceed without rebuilding the model.
+
+7. [Model 3] Repeat Model 1 above, except this time run a logistic regression (`glm()`) to predict CESD scores => 16 (using the `cesd_gte16` as the outcome) as a function of `mcs` scores. Show a summary of the final fitted model and explain the coefficients. [**REMEMBER** to compute the Odds Ratios after you get the raw coefficient (betas)].
+
+```{r Q.7}
+
+GLM.1 <- glm(cesd_gte16 ~ mcs, family=binomial(logit), data=h1)
+
+summary(GLM.1)
+
+```
+
+Since the raw coefficient of -.1716 has a p-value of less than 0, we can determine that menatl health quality of life (mcs) significantly contributes to the ability of the model to predict CESD scores > 16. To calculate the odds ratio, we convert the raw beta with the following code.
+
+```{r Convert raw betas to odds ratios}
+
+coef(GLM.1)
+
+exp(coef(GLM.1))
+
+```
+
+The OR is < 1 (i.e. 0.84). This indicates that the higher a person's mental health quality of life (mcs), the less likely they will be to have a cesd scores of > 16. For every point increase in mcs, the odds of them having a cesd score > 16 decreases by .84.  Or the OR can be inverted and interpreted as: for every point decrease in mcs, the odds of having cesd > 16 (or potential for clinical depression) is increased by 1.19, or 19%.
+
+8. Use the `predict()` function like we did in class to predict CESD => 16 and compare it back to the original data. For now, use a cutoff probability of 0.5 - if the probability is > 0.5 consider this to be true and false otherwise. Like we did in class. **REMEMBER** See the R code for the class example at [https://github.com/melindahiggins2000/N741_lecture11_27March2018/blob/master/lesson11_logreg_Rcode.R](https://github.com/melindahiggins2000/N741_lecture11_27March2018/blob/master/lesson11_logreg_Rcode.R)
+    + How well did the model correctly predict CESD scores => 16 (indicating depression)? (make the "confusion matrix" and look at the true positives and true negatives versus the false positives and false negatives).
+    
+```{r Q.8}
+
+# Preticted probabilities
+GLM.1.predict <- predict(GLM.1, newdata=h1, type="response")
+
+# Plot of continuous predictor for these probabilities
+plot(h1$mcs, GLM.1.predict)
+
+# Confusion matrix 
+t1 <- table(GLM.1.predict > 0.5, h1$cesd_gte16)
+t1
+
+# Sensitivity
+tpr <- t1[2,2]/(t1[2,2]+t1[1,2])
+tpr 
+
+#Specificity
+tnr <- t1[1,1]/(t1[1,1]+t1[2,1])
+tnr
+
+
+```
+Using a cutoff probability of 0.5, the confusion matrix indicates that:
+a)  There were 395 true positives. That is, there are 395 "correct" predictions where the model correctly predicted a cesd score >/= 16. 
+b)  There were 22 true negatives. That is, there are 22 preditions that the individual  scored < 16, when this was actually the case.
+c)  There were 24 false positives. That is, there are 24 cases that were incorrectly predicted a cesd score >/=16, when they actually were < 16.
+d)  There were 12 false negatives, or 12 cases that were incorrectly predicted to have a cesd score < 16, when they were actually > 16.
+
+The sensitivity (true positive) rate is 0.97 and the specificity (true negative) rate is 0.48. The sensitivity of this model is excellent, i.e. its ability to predict a cesd >/= 16, however, the specificity is only fair, meaning that less than half of the time the  model is able to correctly identify people who had a cesd </= 16. 
+
+9. Make an ROC curve plot and compute the AUC and explain if this is a good model for predicting depression or not
+
+```{r Q.9}
+
+library(ROCR)
+p <- predict(GLM.1, newdata=h1, 
+             type="response")
+pr <- prediction(p, as.numeric(h1$cesd_gte16))
+prf <- performance(pr, measure = "tpr", x.measure = "fpr")
+plot(prf)
+abline(a=0, b=1, col="red")
+
+auc <- performance(pr, measure = "auc")
+auc <- auc@y.values[[1]]
+auc
+
+```
+
+The ROC curve is very close to the upper left hand corner, confirming, what we already saw in previous analyses, i.e. that it is a very good model for prediting depression (cesd >/= 16). We see this also with the auc value which is > .9 indicating excellent predictive ability.
+
+10. Make a plot showing the probability curve - put the `mcs` values on the X-axis and the probability of depression on the Y-axis. Based on this plot, do you think the `mcs` is a good predictor of depression? [**FYI** This plot is also called an "effect plot" is you're using `Rcmdr` to do these analyses.]
+
+```{r Q. 10}
+
+library(effects)
+
+plot(allEffects(GLM.1))
+
+```
+
+This plot confirms that people with high mental health quality of life are less likely to have cesd scores indicative of depression. MCS does appear to be a good predictor of depression, however, the predictive ability of the tool appears to drop off at higher levels, i.e. the model doesn't work as well for people with excellent mental health. This, however, makes sense since this is the only predictor in the model!  
+
+---
+
+

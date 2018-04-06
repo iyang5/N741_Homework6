@@ -1,0 +1,71 @@
+<!-- R Commander Markdown Template -->
+
+Replace with Main Title
+=======================
+
+### Your Name
+
+### `r as.character(Sys.Date())`
+
+```{r echo=FALSE}
+# include this code chunk as-is to set options
+knitr::opts_chunk$set(comment=NA, prompt=TRUE, out.width=750, fig.height=8, fig.width=8)
+library(Rcmdr)
+library(car)
+library(RcmdrMisc)
+```
+
+
+```{r echo=FALSE}
+# include this code chunk as-is to enable 3D graphs
+library(rgl)
+knitr::knit_hooks$set(webgl = hook_webgl)
+```
+
+```{r}
+RegModel.1 <- lm(cesd~mcs, data=h1)
+summary(RegModel.1)
+```
+
+```{r}
+RegModel.2 <- lm(cesd~age, data=h1)
+summary(RegModel.2)
+```
+
+```{r}
+RegModel.3 <- lm(cesd~female, data=h1)
+summary(RegModel.3)
+```
+
+```{r}
+RegModel.4 <- lm(cesd~homeless, data=h1)
+summary(RegModel.4)
+```
+
+```{r}
+RegModel.5 <- lm(cesd~mcs, data=h1)
+summary(RegModel.5)
+```
+
+```{r}
+RegModel.6 <- lm(cesd~pss_fr, data=h1)
+summary(RegModel.6)
+```
+
+```{r}
+LinearModel.8 <- lm(cesd ~ age, data=h1)
+summary(LinearModel.8)
+```
+
+```{r}
+LinearModel.1 <- lm(cesd ~ age + female + pss_fr + homeless + pcs + mcs, 
+  data=h1)
+summary(LinearModel.1)
+```
+
+```{r}
+LinearModel.8 <- lm(cesd ~ age, data=h1)
+```
+
+
+
