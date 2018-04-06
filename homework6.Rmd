@@ -238,6 +238,10 @@ plot(allEffects(GLM.1))
 
 This plot confirms that people with high mental health quality of life are less likely to have cesd scores indicative of depression. MCS does appear to be a good predictor of depression, however, the predictive ability of the tool appears to drop off at higher levels, i.e. the model doesn't work as well for people with excellent mental health. This, however, makes sense since this is the only predictor in the model!  
 
+Here is the link to my github repository:
+
+https://github.com/iyang5/N741_Homework6.git
+
 ---
 
 
